@@ -1,0 +1,25 @@
+name: Project checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  generator-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Generate reproducible sample SQL
+        run: python scripts/generate_sample_data.py
+      - name: Verify employee insert count
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('database/06_sample_data.sql').read_text()
+          count = text.count('INSERT INTO employees')
+          assert count == 120, f'expected 120 employees, got {count}'
+          print('Validated 120 generated employee records')
+          PY
